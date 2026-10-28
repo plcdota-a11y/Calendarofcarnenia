@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário de Carnenia</title>
+    
+    <!-- Google Fonts for Medieval Aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        crimson: ['Crimson Text', 'serif'],
+                    },
+                    colors: {
+                        medieval: {
+                            900: '#14120e', // Very dark brown/black
+                            800: '#231f18', // Panel background
+                            700: '#383025', // Borders
+                            600: '#544735', // Lighter borders / accents
+                            gold: '#cba052', // Main gold
+                            lightgold: '#e6c883', // Highlight gold
+                            parchment: '#d4c4a8', // Main text
+                            darkparchment: '#9c8c72', // Muted text
+                        }
+                    },
+                    boxShadow: {
+                        'glow': '0 0 15px rgba(203, 160, 82, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #14120e;
+            background-image: radial-gradient(circle at center, #231f18 0%, #14120e 100%);
+            color: #d4c4a8;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #14120e; }
+        ::-webkit-scrollbar-thumb { background: #383025; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #cba052; }
+
+        .golden-border {
+            border: 1px solid #544735;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .golden-text-glow {
+            text-shadow: 0 0 8px rgba(203, 160, 82, 0.4);
+        }
+
+        /* SVG Moons Styles */
+        .moon-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            fill: currentColor;
+        }
+
+        /* Input styling overrides */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        select, input {
+            background-color: #14120e;
+            color: #cba052;
+            border: 1px solid #544735;
+            outline: none;
+        }
+        select:focus, input:focus {
+            border-color: #cba052;
+        }
+    </style>
+</head>
+<body class="font-crimson min-h-screen flex flex-col items-center p-4 sm:p-8">
+
+    <!-- Header Section -->
+    <header class="text-center w-full max-w-4xl mb-8">
+        <h1 class="font-cinzel text-4xl sm:text-5xl font-black text-medieval-gold golden-text-glow mb-2 uppercase tracking-widest">
+            Carnenia
+        </h1>
+        <p class="font-cinzel text-medieval-darkparchment tracking-widest text-sm">O Alinhamento Duo-Lunar</p>
+        <div class="h-px w-full max-w-md mx-auto mt-4 bg-gradient-to-r from-transparent via-medieval-600 to-transparent"></div>
+    </header>
+
+    <!-- Controls Panel -->
+    <div class="w-full max-w-4xl golden-border bg-medieval-800 rounded-lg p-4 sm:p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
+        
+        <!-- Month Navigation -->
+        <div class="flex items-center gap-4">
+            <button id="btn-prev" class="text-medieval-gold hover:text-medieval-lightgold hover:scale-110 transition p-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            
+            <div class="text-center w-40">
+                <h2 id="display-month" class="font-cinzel text-2xl font-bold text-medieval-lightgold golden-text-glow">Ordan</h2>
+                <span id="display-season" class="text-xs uppercase tracking-widest text-medieval-darkparchment">Primavera</span>
+            </div>
+
+            <button id="btn-next" class="text-medieval-gold hover:text-medieval-lightgold hover:scale-110 transition p-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+        </div>
+
+        <!-- Jump to Specific Date -->
+        <div class="flex items-center gap-3 font-cinzel text-sm">
+            <select id="select-month" class="px-3 py-1.5 rounded cursor-pointer font-bold tracking-wide"></select>
+            
+            <div class="flex items-center">
+                <span class="text-medieval-darkparchment mr-2">Ano</span>
+                <input id="input-year" type="number" min="1" class="w-16 px-2 py-1.5 rounded font-bold text-center text-lg" value="1">
+            </div>
+
+            <select id="select-era" class="px-3 py-1.5 rounded cursor-pointer font-bold tracking-wide">
+                <option value="DGS">DGS</option>
+                <option value="AGS">AGS</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Calendar Grid Area -->
+    <div class="w-full max-w-4xl golden-border bg-medieval-800 rounded-lg p-4 sm:p-8 shadow-2xl relative z-0">
+        
+        <!-- Weekdays Header -->
+        <div class="grid grid-cols-7 gap-2 mb-4">
+            <!-- Filled by JS -->
+            <div id="weekdays-container" class="contents font-cinzel text-medieval-gold font-bold text-xs sm:text-sm text-center tracking-wider"></div>
+        </div>
+
+        <!-- Days Grid -->
+        <div id="days-container" class="grid grid-cols-7 gap-2 sm:gap-3">
+            <!-- Cells generated by JS -->
+        </div>
+
+    </div>
+
+    <!-- Legend -->
+    <div class="w-full max-w-4xl mt-8 flex flex-wrap justify-center gap-6 text-sm text-medieval-darkparchment font-cinzel">
+        <div class="flex items-center gap-2">
+            <span class="text-medieval-lightgold">🌕</span> Lua Cheia
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-medieval-lightgold">🌑</span> Lua Nova
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-medieval-lightgold">🌒</span> Crescente
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-medieval-lightgold">🌘</span> Minguante
+        </div>
+    </div>
+
+    <script>
+        // === CORE DATA ===
+        const MONTHS = [
+            { name: "Ordan", days: 30, season: "Primavera" },
+            { name: "Escordin", days: 30, season: "Primavera" },
+            { name: "Yunar", days: 29, season: "Primavera" },
+            { name: "Junar", days: 30, season: "Verão" },
+            { name: "Peikar", days: 30, season: "Verão" },
+            { name: "Escorin", days: 29, season: "Verão" },
+            { name: "Voltin", days: 30, season: "Verão" },
+            { name: "Moiarin", days: 30, season: "Outono" },
+            { name: "Nóber", days: 29, season: "Outono" },
+            { name: "Dëcar", days: 30, season: "Outono" },
+            { name: "Orgin", days: 30, season: "Inverno" },
+            { name: "Mungin", days: 29, season: "Inverno" },
+            { name: "Jinfer", days: 30, season: "Inverno" },
+            { name: "Uiver", days: 30, season: "Inverno" },
+        ];
+
+        const WEEKDAYS = ["D'kalir", "Elhelihúm", "Laselys", "Vôely", "Pracele", "Dimeer", "Foraeyl"];
+
+        // === STATE ===
+        let currentYear = 1;
+        let currentEra = 'DGS';
+        let currentMonth = 0; // 0-indexed (Ordan)
+
+        // === MATHEMATICS & LOGIC ===
+        
+        // Modulo helper for negative numbers
+        const mod = (n, m) => ((n % m) + m) % m;
+        
+        // Leap year is exactly every 5th year for both DGS and AGS internally
+        const isLeapYear = (year) => year % 5 === 0;
+
+        const getDaysInMonth = (year, monthIndex) => {
+            if (monthIndex === 13 && isLeapYear(year)) return 29;
+            return MONTHS[monthIndex].days;
+        };
+
+        // Calculates absolute day from Day 1 of Year 1 DGS
+        const getAbsoluteDay = (year, era, monthIndex, day) => {
+            let baseAbsDay = 0;
+            
+            if (era === 'DGS') {
+                const y = year - 1;
+                // Full cycles + remaining years
+                baseAbsDay = Math.floor(y / 5) * 2079 + (y % 5) * 416 + 1;
+            } else if (era === 'AGS') {
+                // Year 1 AGS is exactly preceding Year 1 DGS.
+                // Year 1 AGS = 416 days. Year 5 AGS = 415 days.
+                const fullCyclesBack = Math.floor(year / 5);
+                const remYearsBack = year % 5;
+                const daysBack = fullCyclesBack * 2079 + remYearsBack * 416;
+                baseAbsDay = -daysBack + 1;
+            }
+
+            // Add months passed in the current year
+            for (let m = 0; m < monthIndex; m++) {
+                baseAbsDay += getDaysInMonth(year, m);
+            }
+
+            // Add days in the current month
+            return baseAbsDay + day - 1;
+        };
+
+        const getMoonPhase = (absDay, cycle) => {
+            // Find the exact integer day of the peaks
+            const nFull = Math.round(absDay / cycle);
+            const fullDay = Math.round(nFull * cycle);
+            
+            const nNew = Math.round((absDay - cycle / 2) / cycle);
+            const newDay = Math.round(nNew * cycle + cycle / 2);
+
+            if (absDay === fullDay) return { name: 'Cheia', svg: '🌕' };
+            if (absDay === newDay) return { name: 'Nova', svg: '🌑' };
+            
+            const pos = mod(absDay, cycle);
+            if (pos > 0 && pos < cycle / 2) {
+                return { name: 'Minguante', svg: '🌘' };
+            } else {
+                return { name: 'Crescente', svg: '🌒' };
+            }
+        };
+
+        // === DOM ELEMENTS ===
+        const weekdaysContainer = document.getElementById('weekdays-container');
+        const daysContainer = document.getElementById('days-container');
+        const displayMonth = document.getElementById('display-month');
+        const displaySeason = document.getElementById('display-season');
+        
+        const selectMonth = document.getElementById('select-month');
+        const inputYear = document.getElementById('input-year');
+        const selectEra = document.getElementById('select-era');
+        
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+
+        // === INITIALIZATION ===
+        function init() {
+            // Setup Weekdays Header
+            WEEKDAYS.forEach(day => {
+                const div = document.createElement('div');
+                div.textContent = window.innerWidth > 640 ? day : day.substring(0, 3);
+                weekdaysContainer.appendChild(div);
+            });
+
+            // Setup Month Select
+            MONTHS.forEach((m, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = m.name;
+                selectMonth.appendChild(opt);
+            });
+
+            // Event Listeners
+            btnPrev.addEventListener('click', navigatePrev);
+            btnNext.addEventListener('click', navigateNext);
+            selectMonth.addEventListener('change', (e) => {
+                currentMonth = parseInt(e.target.value);
+                updateUI();
+            });
+            inputYear.addEventListener('change', (e) => {
+                let val = parseInt(e.target.value);
+                if (isNaN(val) || val < 1) val = 1;
+                currentYear = val;
+                inputYear.value = val;
+                updateUI();
+            });
+            selectEra.addEventListener('change', (e) => {
+                currentEra = e.target.value;
+                updateUI();
+            });
+
+            updateUI();
+        }
+
+        // === NAVIGATION LOGIC (Chronological) ===
+        function navigateNext() {
+            currentMonth++;
+            if (currentMonth > 13) {
+                currentMonth = 0;
+                if (currentEra === 'AGS') {
+                    currentYear--;
+                    if (currentYear === 0) {
+                        currentYear = 1;
+                        currentEra = 'DGS';
+                    }
+                } else {
+                    currentYear++;
+                }
+            }
+            updateUI();
+        }
+
+        function navigatePrev() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 13;
+                if (currentEra === 'DGS') {
+                    currentYear--;
+                    if (currentYear === 0) {
+                        currentYear = 1;
+                        currentEra = 'AGS';
+                    }
+                } else {
+                    currentYear++;
+                }
+            }
+            updateUI();
+        }
+
+        // === RENDER ===
+        function updateUI() {
+            // Update Controls
+            selectMonth.value = currentMonth;
+            inputYear.value = currentYear;
+            selectEra.value = currentEra;
+            
+            // Update Header
+            displayMonth.textContent = MONTHS[currentMonth].name;
+            displaySeason.textContent = MONTHS[currentMonth].season;
+
+            renderGrid();
+        }
+
+        function renderGrid() {
+            daysContainer.innerHTML = '';
+            
+            const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+            const firstDayAbs = getAbsoluteDay(currentYear, currentEra, currentMonth, 1);
+            
+            // Day 1 of Year 1 DGS is absDay 1, index 0 (D'kalir)
+            const startingWeekday = mod(firstDayAbs - 1, 7);
+            
+            // Render Blanks
+            for (let i = 0; i < startingWeekday; i++) {
+                const blank = document.createElement('div');
+                blank.className = "aspect-square opacity-0";
+                daysContainer.appendChild(blank);
+            }
+
+            // Render Days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const absDay = getAbsoluteDay(currentYear, currentEra, currentMonth, day);
+                const majorMoon = getMoonPhase(absDay, 29.7);
+                const minorMoon = getMoonPhase(absDay, 14.85);
+
+                const isPerfectAlignment = majorMoon.name === 'Cheia' && minorMoon.name === 'Cheia';
+
+                const cell = document.createElement('div');
+                
+                let baseClasses = "relative flex flex-col items-center justify-between aspect-square p-1 sm:p-2 rounded border border-medieval-700 bg-medieval-900/50 transition-colors group ";
+                
+                if (isPerfectAlignment) {
+                    baseClasses += "border-medieval-gold shadow-glow bg-[#3a2f1b] ";
+                } else {
+                    baseClasses += "hover:border-medieval-600 hover:bg-medieval-800 ";
+                }
+
+                cell.className = baseClasses;
+
+                // Inner HTML Structure
+                cell.innerHTML = `
+                    <div class="absolute top-1 right-1 text-[9px] text-medieval-600 font-sans tracking-tighter hidden sm:block">#${absDay}</div>
+                    
+                    <div class="mt-2 sm:mt-3 text-xl sm:text-3xl font-bold ${isPerfectAlignment ? 'text-medieval-lightgold golden-text-glow' : 'text-medieval-parchment'}">
+                        ${day}
+                    </div>
+                    
+                    <div class="flex justify-center gap-1 sm:gap-2 mb-1 w-full relative">
+                        <span class="text-sm sm:text-xl drop-shadow-md cursor-help relative group/major">
+                            ${majorMoon.svg}
+                            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-medieval-900 border border-medieval-600 text-[10px] text-medieval-parchment rounded opacity-0 group-hover/major:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-20">Maior: ${majorMoon.name}</div>
+                        </span>
+                        
+                        <span class="text-xs sm:text-base drop-shadow-md cursor-help relative group/minor flex items-end">
+                            ${minorMoon.svg}
+                            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-medieval-900 border border-medieval-600 text-[10px] text-medieval-parchment rounded opacity-0 group-hover/minor:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-20">Menor: ${minorMoon.name}</div>
+                        </span>
+                    </div>
+                `;
+
+                daysContainer.appendChild(cell);
+            }
+        }
+
+        // Boot
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
